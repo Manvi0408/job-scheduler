@@ -121,6 +121,27 @@ erDiagram
     JOB ||--o{ DEAD_LETTER_QUEUE_ENTRY : redirects
     WORKER ||--o{ WORKER_HEARTBEAT : reports
 ```
+## Database Architecture
+```mermaid
+erDiagram
+
+    ORGANIZATION ||--o{ PROJECT : contains
+    PROJECT ||--o{ QUEUE : owns
+    RETRY_POLICY ||--o{ QUEUE : governs
+
+    QUEUE ||--o{ JOB : processes
+
+    JOB ||--o{ JOB_EXECUTION : runs
+    WORKER ||--o{ JOB_EXECUTION : executes
+
+    JOB_EXECUTION ||--o{ JOB_LOG : generates
+
+    JOB ||--o| DEAD_LETTER_QUEUE_ENTRY : moved_to
+
+    WORKER ||--o{ WORKER_HEARTBEAT : reports
+
+    
+```
 
 ---
 
