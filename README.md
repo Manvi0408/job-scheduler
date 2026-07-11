@@ -121,32 +121,192 @@ erDiagram
     JOB ||--o{ DEAD_LETTER_QUEUE_ENTRY : redirects
     WORKER ||--o{ WORKER_HEARTBEAT : reports
 ```
+## Database Architecture
+```mermaid
+erDiagram
+
+    ORGANIZATION ||--o{ PROJECT : contains
+    PROJECT ||--o{ QUEUE : owns
+    RETRY_POLICY ||--o{ QUEUE : governs
+
+    QUEUE ||--o{ JOB : processes
+
+    JOB ||--o{ JOB_EXECUTION : runs
+    WORKER ||--o{ JOB_EXECUTION : executes
+
+    JOB_EXECUTION ||--o{ JOB_LOG : generates
+
+    JOB ||--o| DEAD_LETTER_QUEUE_ENTRY : moved_to
+
+    WORKER ||--o{ WORKER_HEARTBEAT : reports
+
+    
+```
 
 ---
 
-## Core Platform Features
+# 🎯 Core Features
 
-1. **Layered Dark Developer-Tool Theme**: Beautiful, premium theme using HSL `#0A0A0F` dark layout background, semi-transparent `#12121A` borders, `#1A1A24` glass cards, and amber accent `#F59E0B` interactive glow cues.
-2. **Dashboard Overview Workspace**: Real-time widgets displaying total job counts, active workers, average execution times, network throughput area charts, and system uptime rates.
-3. **Advanced Queue Management**: Visual tables showing health status (Healthy / Warning / Critical states), inline pause/resume controls, edit forms, clear queue triggers, and delete buttons.
-4. **Queue Details Sub-page**: Specific sub-navigation views for Overview parameters, historical throughput Recharts, worker node assignments, and queue job logs.
-5. **Real-time Live Activity Events Feed**: Collapsible right-hand panel connected to Socket.IO telemetry gateways streaming status shifts (crashes, retries, completions, heartbeats) live.
-6. **Keyboard Shortcuts Command Palette**: Press `Ctrl + K` to display the modal overlay for shortcut actions (create queues, submit jobs, navigate tabs).
-7. **Search Everywhere Header**: Instant search filter dynamically matching job IDs, queues, workers, and project parameters.
-8. **Interactive Job Explorer & Details Drawer**: Slide-out pane showing job metadata, syntax-highlighted JSON task parameters, vertical stepper timelines (Created -> Queued -> Running -> Completed), and individual execution logs.
-9. **Dead Letter Queue dedicated console**: View crashed jobs, trace log diagnostics, requeue tasks immediately, or clone payloads to submit new ones.
-10. **System Health Status Board**: Operational monitoring showing online/offline status lights for Rest API Gateways, Redis nodes (real/mock), local databases, Socket.IO channels, and worker instances.
-11. **Logs Explorer Console**: Terminal-themed logs dashboard filtering entries by level (INFO/WARN/ERROR), with quick clip-to-copy and logs download actions.
-12. **Scheduler Calendar View**: Central monitor displaying recurring Cron expressions (e.g. `*/5 * * * *`), cron explanations, delayed offset lists, and next planned runs.
-13. **Workflow Dependency DAG visualization**: Hierarchical task pipeline diagrams illustrating parent-child workflow dependencies (e.g. Ingest -> Process -> Report).
-14. **Worker Clusters Monitor**: Live stats for each worker instance showing heartbeat telemetry logs, system CPU loads, RAM usage percentages, and average durations.
-15. **Retry Policies Manager**: View strategy mappings (Fixed, Linear, Exponential backoff calculations) governing queue failures.
-16. **AI Failure summary and diagnostics**: Automatic diagnostics modal detailing failed runs, likely root causes, and remediation advice.
-17. **Toast Event Notifications**: Banner system notifications showing success, warning, info, and error status transitions.
-18. **Polished Empty States**: Custom graphic placeholders with quick-action CTAs for newly created projects.
-19. **Mobile Responsiveness**: Designed from the ground up to render beautifully on mobile, tablet, and widescreen developer screens.
-20. **Under-the-hood Redis Fallback Direct Polling**: Automatic transition to Mysql-based polling in the background if a local Redis server is missing, avoiding Lua-based container blockages.
+## 🚀 Distributed Job Processing
 
+- Immediate Jobs
+- Delayed Jobs
+- Scheduled Jobs
+- Recurring Cron Jobs
+- Batch Jobs
+- Queue Priorities
+- Idempotency Keys
+- Workflow Dependency DAGs
+
+---
+
+## 🛡 Reliability & Fault Tolerance
+
+- Atomic Job Claiming
+- Fixed Retry Strategy
+- Linear Retry Strategy
+- Exponential Retry Strategy
+- Dead Letter Queue (DLQ)
+- Full Execution History
+- Failure Tracking
+- Graceful Shutdown
+- Crash Recovery
+
+---
+
+## ⚙️ Distributed Worker Infrastructure
+
+- Multiple Concurrent Workers
+- Worker Heartbeats
+- Load Monitoring
+- Worker Registration
+- Independent Worker Scaling
+- Queue Concurrency Limits
+- Scheduler Isolation
+
+---
+
+## 📦 Queue Management
+
+- Queue Creation
+- Pause / Resume Queues
+- Rate Limiting
+- Retry Policies
+- Throughput Monitoring
+- Queue Analytics
+- Health Monitoring
+
+---
+
+## 📡 Real-Time Monitoring
+
+- Socket.IO Live Events
+- Job Status Updates
+- Worker Activity Feed
+- Throughput Analytics
+- System Health Monitoring
+- Execution Timeline Tracking
+
+---
+
+## 🔍 Observability
+
+- Structured Job Logs
+- Execution Logs
+- Retry History
+- Failure Diagnostics
+- Worker Telemetry
+- Searchable Log Explorer
+- AI Failure Summaries
+
+---
+
+## 🔐 Security
+
+- JWT Authentication
+- Password Hashing
+- Multi-Tenant Organizations
+- RBAC Authorization
+
+### Supported Roles
+
+- OWNER
+- ADMIN
+- MEMBER
+- VIEWER
+
+---
+
+## 🛠 Developer Experience
+
+- Turborepo Monorepo
+- Shared TypeScript Types
+- Shared Zod Validation
+- OpenAPI / Swagger Documentation
+- Docker Compose Support
+- Hot Reload Development
+- PostgreSQL Support
+- MySQL Support
+- Redis Fallback Mechanism
+---
+
+# 🏗 System Architecture
+
+```text
+┌────────────────────────────────────────────┐
+│              Next.js Dashboard             │
+│  Queues │ Jobs │ Workers │ DLQ │ Metrics   │
+└───────────────────┬────────────────────────┘
+                    │
+          REST + Socket.IO
+                    │
+                    ▼
+┌────────────────────────────────────────────┐
+│                NestJS API                  │
+│                                            │
+│ Authentication                             │
+│ Organizations                              │
+│ Projects                                   │
+│ Queues                                     │
+│ Jobs                                       │
+│ Scheduler                                  │
+│ Metrics                                    │
+└───────────────────┬────────────────────────┘
+                    │
+                    ▼
+┌────────────────────────────────────────────┐
+│          MySQL / PostgreSQL                │
+│                                            │
+│ Organizations                              │
+│ Projects                                   │
+│ Queues                                     │
+│ Jobs                                       │
+│ Executions                                 │
+│ Logs                                       │
+│ DLQ                                        │
+│ Workers                                    │
+└──────────────┬─────────────────────────────┘
+               │
+               ▼
+┌────────────────────────────────────────────┐
+│               Worker Pool                  │
+│                                            │
+│ Polling Engine                             │
+│ Retry Engine                               │
+│ Scheduler Loop                             │
+│ Heartbeats                                 │
+│ Concurrent Executors                       │
+└──────────────┬─────────────────────────────┘
+               │
+               ▼
+┌────────────────────────────────────────────┐
+│                  Redis                     │
+│            Pub/Sub Signalling              │
+└────────────────────────────────────────────┘
+
+Fallback:
+Workers automatically switch to direct
+database polling if Redis becomes unavailable.
 ---
 
 ## Quickstart (Local Dev Server)
@@ -172,3 +332,13 @@ To start the platform instantly outside Docker (using your active local MySQL on
 5. Access:
    - **Frontend Dashboard**: `http://localhost:3001`
    - **Backend OpenAPI docs**: `http://localhost:3000/docs`
+  
+# 👨‍💻 Author
+
+<div align="center">
+
+### Manvi Yadav
+
+**Registration Number:** RA2311003030359  
+**B.Tech Computer Science & Engineering**  
+**SRM Institute of Science and Technology**
