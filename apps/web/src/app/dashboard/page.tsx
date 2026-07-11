@@ -1108,7 +1108,7 @@ export default function DashboardPage() {
                       </button>
                     </div>
 
-                    <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                    <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                       <table className="w-full border-collapse text-left text-sm text-slate-300">
                         <thead className="bg-[#1A1A24]/90 text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                           <tr>
@@ -1273,7 +1273,7 @@ export default function DashboardPage() {
 
                     {/* SUB-TAB 4: Queue Jobs */}
                     {selectedQueueSubTab === 'jobs' && (
-                      <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                      <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                         <table className="w-full border-collapse text-left text-sm text-slate-300">
                           <thead className="bg-[#1A1A24] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                             <tr>
@@ -1321,7 +1321,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                   <table className="w-full border-collapse text-left text-sm text-slate-300">
                     <thead className="bg-[#1A1A24] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                       <tr>
@@ -1369,7 +1369,7 @@ export default function DashboardPage() {
                   <>
                     <h3 className="text-lg font-heading font-bold text-white tracking-tight">Worker Monitoring</h3>
                     
-                    <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                    <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                       <table className="w-full border-collapse text-left text-sm text-slate-300">
                         <thead className="bg-[#1A1A24] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                           <tr>
@@ -1478,7 +1478,7 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 <h3 className="text-lg font-heading font-bold text-white tracking-tight">Active Schedulers</h3>
                 
-                <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                   <table className="w-full border-collapse text-left text-sm text-slate-300">
                     <thead className="bg-[#1A1A24] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                       <tr>
@@ -1521,7 +1521,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-slate-500 font-mono">Review task crash reports, patch configurations, and requeue workloads.</p>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                   <table className="w-full border-collapse text-left text-sm text-slate-300">
                     <thead className="bg-[#1A1A24] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                       <tr>
@@ -1575,7 +1575,7 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 <h3 className="text-lg font-heading font-bold text-white tracking-tight">Retry Strategy Configurations</h3>
                 
-                <div className="overflow-hidden rounded-xl border border-white/[0.04] bg-[#12121A]">
+                <div className="overflow-x-auto rounded-xl border border-white/[0.04] bg-[#12121A]">
                   <table className="w-full border-collapse text-left text-sm text-slate-300">
                     <thead className="bg-[#1A1A24] text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-white/[0.04]">
                       <tr>
