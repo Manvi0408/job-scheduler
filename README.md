@@ -309,6 +309,48 @@ Workers automatically switch to direct
 database polling if Redis becomes unavailable.
 ---
 
+## 📁 Project Directory Structure
+
+The platform is designed as a **pnpm monorepo workspace** separating concerns between frontend, REST API, background worker, and shared libraries:
+
+```text
+distributed-job-scheduler/
+├── apps/
+│   ├── api/                   # NestJS REST API & WebSockets Telemetry Gateway
+│   │   ├── src/
+│   │   │   ├── auth/          # Auth controllers, guards & JWT service
+│   │   │   ├── org/           # Organization/RBAC logic
+│   │   │   ├── queue/         # Queue definitions & retry policy seeding
+│   │   │   ├── job/           # Job submission & detail endpoints
+│   │   │   └── telemetry/     # Socket.IO Gateway for real-time dashboard events
+│   │   └── Dockerfile
+│   ├── web/                   # Next.js 16 Web Dashboard Panel (Tailwind CSS)
+│   │   ├── src/app/
+│   │   │   ├── page.tsx       # Root entry check & redirection
+│   │   │   ├── login/         # Styled Login with quick admin autofill
+│   │   │   ├── signup/        # Styled signup view
+│   │   │   └── dashboard/     # Dynamic monitoring, charts, and metrics dashboard
+│   │   └── Dockerfile
+│   └── worker/                # NestJS Background Worker Process
+│       ├── src/
+│       │   └── worker.service.ts # Core polling engine, dependency DAG resolver & retry handler
+│       └── Dockerfile
+├── packages/
+│   └── shared/                # Shared monorepo library (TypeScript workspace)
+│       ├── src/
+│       │   ├── entities/      # TypeORM Entity schemas (User, Org, Queue, Job, Log, etc.)
+│       │   └── index.ts       # Main workspace entry exports
+│       └── tsconfig.json
+├── docs/                      # Technical guides and tutorials
+│   └── deployment_guide.md    # Cloud production deployment reference
+├── docker-compose.yml         # Dev staging orchestrator (MySQL, Redis, API, Worker, Web)
+├── package.json               # Monorepo packages & workspace task pipelines
+├── pnpm-workspace.yaml        # Workspace catalog layout
+└── tsconfig.json              # Shared root TypeScript compiler config
+```
+
+---
+
 ## Quickstart (Local Dev Server)
 
 To start the platform instantly outside Docker (using your active local MySQL on port 3306 and fallback mock Redis):
