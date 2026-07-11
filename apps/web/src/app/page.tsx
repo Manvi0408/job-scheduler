@@ -7,9 +7,12 @@ export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    localStorage.setItem('token', 'bypass-token');
-    localStorage.setItem('user', JSON.stringify({ email: 'admin@scheduler.io' }));
-    router.replace('/dashboard');
+    const token = localStorage.getItem('token');
+    if (token) {
+      router.replace('/dashboard');
+    } else {
+      router.replace('/login');
+    }
   }, [router]);
 
   return (

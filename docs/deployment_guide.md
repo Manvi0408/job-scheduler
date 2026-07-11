@@ -73,3 +73,68 @@ To run tests with coverage reporting:
 ```bash
 pnpm --filter api test
 ```
+
+---
+
+## 4. Cloud Production Deployment
+
+Because this is a distributed system containing persistent processes (the API's WebSockets and the Worker's background loops), **you cannot run the entire platform on Vercel alone**. Instead, deploy the components to specialized cloud hosts.
+
+### Production Architecture
+```mermaid
+graph TD
+    User([User Browser]) -->|HTTPS| Web[Next.js Frontend on Vercel]
+    Web -->|HTTP / WebSockets| API[NestJS API on Render/Railway]
+    Worker[NestJS Worker on Render/Railway] -->|MySQL/PostgreSQL| DB[(Managed Database Neon/Aiven)]
+    API -->|MySQL/PostgreSQL| DB
+    API -->|TCP / Redis Protocol| Redis[(Managed Redis Upstash/RedisCloud)]
+    Worker -->|TCP / Redis Protocol| Redis
+```
+
+---
+
+### Step 1: Managed Database & Redis (Data Tier)
+1. **Database**: Provision a managed database (PostgreSQL on [Neon](https://neon.tech) or MySQL on [Aiven](https://aiven.io)). Keep the connection URI.
+2. **Redis**: Provision a managed Redis database on [Upstash](https://upstash.com) or [Redis Labs](https://redis.com). Keep the connection URI/details.
+
+---
+
+### Step 2: Deploy Backend API & Worker (Render/Railway)
+Deploy the API and Worker to platforms supporting long-running Node.js processes, such as **Render** or **Railway**.
+
+#### A. NestJS API (Web Service)
+- **Deployment Type**: Web Service (or Docker container using [`apps/api/Dockerfile`](file:///C:/Users/Manvi/.gemini/antigravity-ide/scratch/distributed-job-scheduler/apps/api/Dockerfile))
+- **Build Command**: `pnpm install && pnpm --filter shared build && pnpm --filter api build`
+- **Start Command**: `pnpm --filter api start`
+- **Port**: `3000` (mapped to external HTTP/HTTPS traffic)
+- **Environment Variables**:
+  ```env
+  DATABASE_URL="your-managed-db-connection-string"
+  REDIS_HOST="your-redis-host"
+  REDIS_PORT="your-redis-port"
+  REDIS_PASSWORD="your-redis-password"
+  JWT_SECRET="generate-a-strong-random-key"
+  PORT=3000
+  NODE_ENV="production"
+  ```
+
+#### B. NestJS Worker (Background Worker / Private Service)
+- **Deployment Type**: Background Worker (does not need open ports)
+- **Build Command**: `pnpm install && pnpm --filter shared build && pnpm --filter worker build`
+- **Start Command**: `pnpm --filter worker start`
+- **Environment Variables**: Same as the API (`DATABASE_URL`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `NODE_ENV`).
+
+---
+
+### Step 3: Deploy Next.js Web Dashboard (Vercel)
+Vercel is perfect for the frontend application.
+
+1. **Import the repository** into Vercel.
+2. **Framework Preset**: Next.js.
+3. **Root Directory**: `apps/web` (or root path if configured in monorepo with Vercel's build settings).
+4. **Build & Development Settings**:
+   - **Build Command**: `cd ../.. && pnpm install && pnpm --filter shared build && pnpm --filter web build` (Vercel overrides this automatically in monorepos if "pnpm" is detected).
+5. **Environment Variables**:
+   - `NEXT_PUBLIC_API_URL`: Set this to your deployed **NestJS API** production domain (e.g. `https://scheduler-api.onrender.com`).
+6. Click **Deploy**. Vercel will build and serve your beautiful dark-themed dashboard.
+

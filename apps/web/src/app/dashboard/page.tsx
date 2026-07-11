@@ -153,14 +153,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
-    let storedToken = localStorage.getItem('token');
-    let storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
 
     if (!storedToken) {
-      storedToken = 'bypass-token';
-      storedUser = JSON.stringify({ email: 'admin@scheduler.io' });
-      localStorage.setItem('token', storedToken);
-      localStorage.setItem('user', storedUser);
+      router.replace('/login');
+      return;
     }
 
     setToken(storedToken);
@@ -242,6 +240,7 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error(err);
+      triggerToast('Unable to connect to API server. Verify backend is running.', 'error');
     }
   };
 
@@ -444,7 +443,22 @@ export default function DashboardPage() {
 
   const handleCreateQueue = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQueueName.trim() || !activeProjectId || !token || !newQueuePolicyId) return;
+    if (!newQueueName.trim()) {
+      triggerToast('Queue name is required', 'error');
+      return;
+    }
+    if (!activeProjectId) {
+      triggerToast('Project ID is missing. Please select or create a project.', 'error');
+      return;
+    }
+    if (!token) {
+      triggerToast('Session token is missing. Please log in again.', 'error');
+      return;
+    }
+    if (!newQueuePolicyId) {
+      triggerToast('A retry policy must be selected. If the dropdown is empty, verify the API is running.', 'error');
+      return;
+    }
     try {
       const payload: any = {
         name: newQueueName,
@@ -483,7 +497,14 @@ export default function DashboardPage() {
 
   const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeQueueId || !token) return;
+    if (!activeQueueId) {
+      triggerToast('No active queue selected. Please select a queue first.', 'error');
+      return;
+    }
+    if (!token) {
+      triggerToast('Session token is missing. Please log in again.', 'error');
+      return;
+    }
     try {
       let parsedPayload = {};
       try {
@@ -607,9 +628,10 @@ export default function DashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('activeOrgId');
     setToken(null);
     setUser(null);
-    router.push('/');
+    router.push('/login');
   };
 
   const executeCommandPaletteAction = (action: string) => {
@@ -894,7 +916,7 @@ export default function DashboardPage() {
                 className="rounded-lg border border-white/[0.06] bg-[#1A1A24] px-2.5 py-1 text-xs text-white outline-none focus:border-[#F59E0B] transition"
               >
                 {organizations.map((org) => (
-                  <option key={org.id} value={org.id}>
+                  <option key={org.id} value={org.id} className="bg-[#1A1A24] text-slate-200">
                     {org.name}
                   </option>
                 ))}
@@ -914,7 +936,7 @@ export default function DashboardPage() {
                   className="rounded-lg border border-white/[0.06] bg-[#1A1A24] px-2.5 py-1 text-xs text-white outline-none focus:border-[#F59E0B] transition"
                 >
                   {projects.map((proj) => (
-                    <option key={proj.id} value={proj.id}>
+                    <option key={proj.id} value={proj.id} className="bg-[#1A1A24] text-slate-200">
                       {proj.name}
                     </option>
                   ))}
@@ -1614,10 +1636,10 @@ export default function DashboardPage() {
                     onChange={(e) => setLogsLevelFilter(e.target.value)}
                     className="rounded-lg border border-white/[0.06] bg-[#12121A] px-3 py-1.5 text-xs text-white outline-none"
                   >
-                    <option value="ALL">ALL LEVELS</option>
-                    <option value="INFO">INFO ONLY</option>
-                    <option value="WARN">WARN ONLY</option>
-                    <option value="ERROR">ERROR ONLY</option>
+                    <option value="ALL" className="bg-[#12121A] text-slate-200">ALL LEVELS</option>
+                    <option value="INFO" className="bg-[#12121A] text-slate-200">INFO ONLY</option>
+                    <option value="WARN" className="bg-[#12121A] text-slate-200">WARN ONLY</option>
+                    <option value="ERROR" className="bg-[#12121A] text-slate-200">ERROR ONLY</option>
                   </select>
                 </div>
 
@@ -2047,7 +2069,7 @@ export default function DashboardPage() {
                   className="mt-1 w-full rounded-lg border border-white/[0.06] bg-[#0A0A0F] px-3 py-2 text-sm text-white outline-none focus:border-[#F59E0B] transition font-mono"
                 >
                   {retryPolicies.map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <option key={p.id} value={p.id} className="bg-[#0A0A0F] text-slate-200">
                       {p.name} ({p.strategy} - Max Retries: {p.maxRetries})
                     </option>
                   ))}
@@ -2115,10 +2137,10 @@ export default function DashboardPage() {
                     onChange={(e: any) => setNewJobType(e.target.value)}
                     className="mt-1 w-full rounded-lg border border-white/[0.06] bg-[#0A0A0F] px-3 py-2 text-sm text-white outline-none focus:border-[#F59E0B] transition font-mono"
                   >
-                    <option value="IMMEDIATE">IMMEDIATE</option>
-                    <option value="DELAYED">DELAYED</option>
-                    <option value="SCHEDULED">SCHEDULED</option>
-                    <option value="RECURRING">RECURRING (CRON)</option>
+                    <option value="IMMEDIATE" className="bg-[#0A0A0F] text-slate-200">IMMEDIATE</option>
+                    <option value="DELAYED" className="bg-[#0A0A0F] text-slate-200">DELAYED</option>
+                    <option value="SCHEDULED" className="bg-[#0A0A0F] text-slate-200">SCHEDULED</option>
+                    <option value="RECURRING" className="bg-[#0A0A0F] text-slate-200">RECURRING (CRON)</option>
                   </select>
                 </div>
 
