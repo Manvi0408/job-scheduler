@@ -2,6 +2,50 @@
 
 A production-grade, distributed background job processing platform inspired by BullMQ, Sidekiq, Celery, and AWS SQS, built with Node.js, TypeScript, NestJS, TypeORM, PostgreSQL/MySQL, Redis, Socket.IO, Next.js 15, Tailwind CSS, and Docker.
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="login.png" width="450"/>
+      <br/>
+      <sub><b>Authentication & Cluster Setup</b></sub>
+    </td>
+    <td align="center">
+      <img src="dashboard.png" width="450"/>
+      <br/>
+      <sub><b>Real-Time Dashboard Overview</b></sub>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img src="queue.png" width="450"/>
+      <br/>
+      <sub><b>Queue Management</b></sub>
+    </td>
+    <td align="center">
+      <img src="job explorer.png" width="450"/>
+      <br/>
+      <sub><b>Job Explorer & Task Tracking</b></sub>
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img src="workers.png" width="450"/>
+      <br/>
+      <sub><b>Worker Monitoring</b></sub>
+    </td>
+    <td align="center">
+      <img src="analytics.png" width="450"/>
+      <br/>
+      <sub><b>Analytics Dashboard</b></sub>
+    </td>
+  </tr>
+</table>
+---
+
 ---
 
 ## Entity-Relationship (ER) Database Schema
@@ -142,8 +186,6 @@ erDiagram
 
     
 ```
-
----
 
 # 🎯 Core Features
 
