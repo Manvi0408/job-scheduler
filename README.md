@@ -399,8 +399,8 @@ To start the platform instantly outside Docker (using your active local MySQL on
 
 1. **Verify Database connection** inside the root `.env` file:
    ```env
-   DATABASE_URL="mysql://root:SchedulerSecure123!@127.0.0.1:3306/distributed_job_scheduler"
-   JWT_SECRET="JWT_Super_Secret_Key_For_Job_Scheduler_2026_!"
+   DATABASE_URL=
+   JWT_SECRET=
    PORT=3000
    ```
 2. Make sure the database **`distributed_job_scheduler`** exists in your local MySQL instance.
