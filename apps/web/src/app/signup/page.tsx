@@ -1,4 +1,5 @@
 'use client';
+import { API_BASE } from '@/lib/api';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +23,7 @@ export default function SignupPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:3000/api/v1/auth/signup', {
+      const res = await fetch(`${API_BASE}/api/v1/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

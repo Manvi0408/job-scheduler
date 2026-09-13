@@ -1,4 +1,5 @@
 'use client';
+import { API_BASE, API_V1 } from '@/lib/api';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -181,7 +182,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!token) return;
 
-    socketRef.current = io('http://localhost:3000/telemetry', {
+    socketRef.current = io(`${API_BASE}/telemetry`, {
       transports: ['websocket'],
     });
 
@@ -227,7 +228,7 @@ export default function DashboardPage() {
   // Data Fetching Methods
   const fetchOrgs = async (t: string) => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/organizations', {
+      const res = await fetch(`${API_BASE}/api/v1/organizations`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -246,7 +247,7 @@ export default function DashboardPage() {
 
   const fetchProjects = async (orgId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/organizations/${orgId}/projects`, {
+      const res = await fetch(`${API_BASE}/api/v1/organizations/${orgId}/projects`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -273,7 +274,7 @@ export default function DashboardPage() {
 
   const fetchProjectMetrics = async (projectId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/metrics`, {
+      const res = await fetch(`${API_BASE}/api/v1/projects/${projectId}/metrics`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -285,7 +286,7 @@ export default function DashboardPage() {
 
   const fetchQueues = async (projectId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${projectId}/queues`, {
+      const res = await fetch(`${API_BASE}/api/v1/projects/${projectId}/queues`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -312,7 +313,7 @@ export default function DashboardPage() {
 
   const fetchQueueJobs = async (queueId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/queues/${queueId}/jobs`, {
+      const res = await fetch(`${API_BASE}/api/v1/queues/${queueId}/jobs`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -324,7 +325,7 @@ export default function DashboardPage() {
 
   const fetchQueueDlq = async (queueId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/queues/${queueId}/dlq`, {
+      const res = await fetch(`${API_BASE}/api/v1/queues/${queueId}/dlq`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -336,7 +337,7 @@ export default function DashboardPage() {
 
   const fetchQueueMetrics = async (queueId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/queues/${queueId}/metrics`, {
+      const res = await fetch(`${API_BASE}/api/v1/queues/${queueId}/metrics`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -348,7 +349,7 @@ export default function DashboardPage() {
 
   const fetchWorkers = async (t: string) => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/workers', {
+      const res = await fetch(`${API_BASE}/api/v1/workers`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -360,7 +361,7 @@ export default function DashboardPage() {
 
   const fetchRetryPolicies = async (t: string) => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/retry-policies', {
+      const res = await fetch(`${API_BASE}/api/v1/retry-policies`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -373,7 +374,7 @@ export default function DashboardPage() {
 
   const fetchJobLogs = async (jobId: string, t: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/jobs/${jobId}/logs`, {
+      const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/logs`, {
         headers: { Authorization: `Bearer ${t}` },
       });
       const data = await res.json();
@@ -386,7 +387,7 @@ export default function DashboardPage() {
   const fetchJobDetails = async (jobId: string) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/jobs/${jobId}`, {
+      const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -402,7 +403,7 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!newOrgName.trim() || !token) return;
     try {
-      const res = await fetch('http://localhost:3000/api/v1/organizations', {
+      const res = await fetch(`${API_BASE}/api/v1/organizations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: newOrgName }),
@@ -424,7 +425,7 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!newProjectName.trim() || !activeOrgId || !token) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/organizations/${activeOrgId}/projects`, {
+      const res = await fetch(`${API_BASE}/api/v1/organizations/${activeOrgId}/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: newProjectName }),
@@ -470,7 +471,7 @@ export default function DashboardPage() {
         payload.rateLimitWindowMs = parseInt(newQueueRateLimitWindow, 10);
         payload.rateLimitMaxJobs = parseInt(newQueueRateLimitMax, 10);
       }
-      const res = await fetch(`http://localhost:3000/api/v1/projects/${activeProjectId}/queues`, {
+      const res = await fetch(`${API_BASE}/api/v1/projects/${activeProjectId}/queues`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
@@ -529,7 +530,7 @@ export default function DashboardPage() {
         body.parentJobIds = newJobParents.split(',').map((id) => id.trim()).filter(Boolean);
       }
 
-      const res = await fetch(`http://localhost:3000/api/v1/queues/${activeQueueId}/jobs`, {
+      const res = await fetch(`${API_BASE}/api/v1/queues/${activeQueueId}/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
@@ -563,7 +564,7 @@ export default function DashboardPage() {
     if (!token) return;
     try {
       const newStatus = q.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-      const res = await fetch(`http://localhost:3000/api/v1/queues/${q.id}`, {
+      const res = await fetch(`${API_BASE}/api/v1/queues/${q.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
@@ -591,7 +592,7 @@ export default function DashboardPage() {
   const handleRequeueJob = async (jobId: string) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/jobs/${jobId}/requeue`, {
+      const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/requeue`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -613,7 +614,7 @@ export default function DashboardPage() {
     setShowAiModal(true);
     setAiReport(null);
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/jobs/${jobId}/ai-summary`, {
+      const res = await fetch(`${API_BASE}/api/v1/jobs/${jobId}/ai-summary`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -1710,7 +1711,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between py-4">
                     <div>
                       <span className="font-heading font-bold text-white block text-sm">REST API Gateway</span>
-                      <span className="text-xs text-slate-500 font-mono">http://localhost:3000/api/v1</span>
+                      <span className="text-xs text-slate-500 font-mono">{API_V1}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-md shadow-emerald-500/10"></span>

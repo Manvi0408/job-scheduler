@@ -110,13 +110,19 @@ Deploy the API and Worker to platforms supporting long-running Node.js processes
 - **Environment Variables**:
   ```env
   DATABASE_URL="your-managed-db-connection-string"
+  DATABASE_SSL="true"   # required for managed Postgres (Render/Railway/Neon/Supabase)
   REDIS_HOST="your-redis-host"
   REDIS_PORT="your-redis-port"
   REDIS_PASSWORD="your-redis-password"
   JWT_SECRET="generate-a-strong-random-key"
   PORT=3000
   NODE_ENV="production"
+  # Optional: restrict CORS to your dashboard origin(s), comma-separated.
+  CORS_ORIGIN="https://your-dashboard-url"
   ```
+  > The API binds to `0.0.0.0` so the platform can route traffic to it. With
+  > `NODE_ENV=production` and a Postgres `DATABASE_URL`, SSL is enabled
+  > automatically; set `DATABASE_SSL=true` to force it on other setups.
 
 #### B. NestJS Worker (Background Worker / Private Service)
 - **Deployment Type**: Background Worker (does not need open ports)
@@ -135,6 +141,22 @@ Vercel is perfect for the frontend application.
 4. **Build & Development Settings**:
    - **Build Command**: `cd ../.. && pnpm install && pnpm --filter shared build && pnpm --filter web build` (Vercel overrides this automatically in monorepos if "pnpm" is detected).
 5. **Environment Variables**:
-   - `NEXT_PUBLIC_API_URL`: Set this to your deployed **NestJS API** production domain (e.g. `https://scheduler-api.onrender.com`).
+   - `NEXT_PUBLIC_API_URL`: Set this to your deployed **NestJS API** production domain (e.g. `https://scheduler-api.onrender.com`), with **no** trailing `/api/v1` — the app appends that itself.
 6. Click **Deploy**. Vercel will build and serve your beautiful dark-themed dashboard.
+
+> ⚠️ **`NEXT_PUBLIC_API_URL` must be set BEFORE the build runs.** Next.js inlines
+> `NEXT_PUBLIC_*` variables into the client bundle at build time, so if you add or
+> change it later you must trigger a fresh build/redeploy — a restart is not enough.
+
+---
+
+### Common Deployment Pitfalls (Troubleshooting)
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Live site loads but login/dashboard do nothing; console shows failed calls to `localhost:3000` | `NEXT_PUBLIC_API_URL` not set at build time, so the app fell back to localhost | Set `NEXT_PUBLIC_API_URL` to the deployed API URL and **redeploy** the web app |
+| Browser blocks calls with a CORS error | API origin not allowed | Leave `CORS_ORIGIN` unset (reflects origin) or set it to your dashboard URL |
+| API deploy "runs" but is unreachable / health check fails | Service not bound to `0.0.0.0` (now fixed) or wrong `PORT` | Ensure the platform's injected `PORT` is used; the API already binds `0.0.0.0` |
+| API crashes on boot with a Postgres SSL error | Managed Postgres requires SSL | Set `DATABASE_SSL=true` (auto-on when `NODE_ENV=production`) |
+| Worker crashes every ~5s on heartbeat with a SQL function error | Old MySQL-only `uuid()`/`now()` heartbeat on Postgres (now fixed) | Pull latest; heartbeats now use the ORM and are DB-portable |
 
