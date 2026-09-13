@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In, IsNull, LessThan } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Queue, Job, JobExecution, JobLog, DeadLetterQueueEntry, RetryPolicy, Worker } from 'shared';
+import { Queue, Job, JobExecution, JobLog, DeadLetterQueueEntry, RetryPolicy, Worker, WorkerHeartbeat } from 'shared';
 import { RedisService } from './redis.service';
 import { Worker as BullWorker, Job as BullJob, Queue as BullQueue } from 'bullmq';
 import * as os from 'os';
@@ -13,6 +13,7 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
   private workerId!: string;
   private hostname!: string;
   private activeWorkers: Map<string, BullWorker> = new Map();
+  private bullQueues: Map<string, BullQueue> = new Map();
   private processingJobsCount = 0;
   private isShuttingDown = false;
 
@@ -71,11 +72,13 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
         await this.workerRepository.save(worker);
       }
 
-      // Add a heartbeat entry
-      await this.dataSource.query(
-        `INSERT INTO worker_heartbeats (id, workerId, currentLoad, lastSeenAt) VALUES (uuid(), ?, ?, now())`,
-        [this.workerId, this.processingJobsCount]
-      );
+      // Add a heartbeat entry. Use the repository (not raw SQL) so the primary
+      // key and timestamp are generated portably across MySQL and Postgres —
+      // raw uuid()/now() are MySQL-only and crash on Postgres.
+      await this.dataSource.getRepository(WorkerHeartbeat).save({
+        workerId: this.workerId,
+        currentLoad: this.processingJobsCount,
+      });
     } catch (err) {
       this.logger.error(`Failed to report heartbeat: ${(err as Error).message}`);
     }
@@ -327,8 +330,8 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
           await manager.save(Job, claimedJob);
           
           if (!this.redisService.getIsMock()) {
-            // Re-insert into BullMQ with retry delay
-            const bq = new BullQueue(queue.name, { connection: this.redisService.getClient() as any });
+            // Re-insert into BullMQ with retry delay (reuse a pooled queue client)
+            const bq = this.getBullQueue(queue.name);
             await bq.add(
               claimedJob.type,
               { jobId: claimedJob.id },
@@ -430,6 +433,17 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
     return Math.min(delay, max);
   }
 
+  // Reuse a single BullMQ producer per queue instead of opening a new Redis
+  // connection on every retry/dependency push (which leaks connections).
+  private getBullQueue(name: string): BullQueue {
+    let bq = this.bullQueues.get(name);
+    if (!bq) {
+      bq = new BullQueue(name, { connection: this.redisService.getClient() as any });
+      this.bullQueues.set(name, bq);
+    }
+    return bq;
+  }
+
   // Publish event back to database/sockets
   private async emitRealtimeEvent(channel: string, payload: any) {
     try {
@@ -467,7 +481,7 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
               // Push to BullMQ queue
               const queue = await this.queueRepository.findOne({ where: { id: j.queueId } });
               if (queue) {
-                const bq = new BullQueue(queue.name, { connection: this.redisService.getClient() as any });
+                const bq = this.getBullQueue(queue.name);
                 await bq.add(j.type, { jobId: j.id }, { priority: j.priority, jobId: j.id });
               }
             }
@@ -489,6 +503,16 @@ export class WorkerService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Closing worker connection for queue: ${queueName}`);
       await worker.close();
     }
+
+    // Close pooled BullMQ producer connections
+    for (const [queueName, bq] of this.bullQueues.entries()) {
+      try {
+        await bq.close();
+      } catch {
+        this.logger.warn(`Failed to close queue producer for ${queueName}`);
+      }
+    }
+    this.bullQueues.clear();
 
     // Mark worker node INACTIVE
     try {

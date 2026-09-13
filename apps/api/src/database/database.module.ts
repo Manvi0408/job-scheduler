@@ -15,6 +15,13 @@ import * as entities from 'shared';
         }
 
         const isPostgres = dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://');
+        const nodeEnv = configService.get<string>('NODE_ENV');
+
+        // Managed Postgres (Render/Railway/Neon/Supabase) requires SSL. Enable it
+        // for Postgres when DATABASE_SSL=true or when running in production.
+        const useSsl =
+          isPostgres &&
+          (configService.get<string>('DATABASE_SSL') === 'true' || nodeEnv === 'production');
 
         // We filter imported modules to retrieve only class references (TypeORM entities)
         const entityClasses = Object.values(entities).filter(
@@ -26,7 +33,8 @@ import * as entities from 'shared';
           url: dbUrl,
           entities: entityClasses as any,
           synchronize: true, // For portfolio/prototype, synchronize is excellent for out-of-the-box running
-          logging: configService.get<string>('NODE_ENV') === 'development' ? ['error', 'warn'] : ['error'],
+          ssl: useSsl ? { rejectUnauthorized: false } : undefined,
+          logging: nodeEnv === 'development' ? ['error', 'warn'] : ['error'],
         };
       },
     }),
