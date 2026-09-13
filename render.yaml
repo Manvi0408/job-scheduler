@@ -1,6 +1,11 @@
 # Render blueprint for the Distributed Job Scheduler backend.
 # Deploy: Render Dashboard -> New -> Blueprint -> pick this repo -> Apply.
-# This provisions the NestJS API + a free managed Postgres, wired together.
+#
+# This provisions the NestJS API (apps/api) only. Render allows just ONE free
+# Postgres per account, so this blueprint does NOT create a database. Reuse your
+# existing Postgres: after applying, open the job-scheduler-api service ->
+# Environment -> set DATABASE_URL to your Postgres "External Database URL"
+# (works with DATABASE_SSL=true, which is preset below).
 #
 # After it's live, copy the API service's URL (e.g. https://job-scheduler-api.onrender.com)
 # and set NEXT_PUBLIC_API_URL to it on your frontend host, then redeploy the frontend.
@@ -8,11 +13,6 @@
 # The background worker (job execution) is included but commented out because
 # Render's "worker" service type requires a paid plan. The site (signup/login/
 # dashboard) works without it; jobs just won't be picked up until it runs.
-
-databases:
-  - name: job-scheduler-db
-    databaseName: job_scheduler
-    plan: free
 
 services:
   - type: web
@@ -29,10 +29,9 @@ services:
         value: "true"
       - key: JWT_SECRET
         generateValue: true
+      # Set this in the dashboard to your existing Postgres External Database URL.
       - key: DATABASE_URL
-        fromDatabase:
-          name: job-scheduler-db
-          property: connectionString
+        sync: false
       # Optional: lock CORS to your dashboard origin instead of reflecting it.
       # - key: CORS_ORIGIN
       #   value: https://your-dashboard-url
@@ -50,6 +49,4 @@ services:
   #     - key: DATABASE_SSL
   #       value: "true"
   #     - key: DATABASE_URL
-  #       fromDatabase:
-  #         name: job-scheduler-db
-  #         property: connectionString
+  #       sync: false
