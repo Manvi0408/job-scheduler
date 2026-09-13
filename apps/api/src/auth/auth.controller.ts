@@ -1,6 +1,7 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 
 export class SignupDto {
@@ -8,9 +9,9 @@ export class SignupDto {
   @IsEmail({}, { message: 'Invalid email address' })
   email!: string;
 
-  @ApiProperty({ example: 'password123', minLength: 6 })
+  @ApiProperty({ example: 'password123', minLength: 8 })
   @IsNotEmpty()
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password!: string;
 }
 
@@ -26,6 +27,10 @@ export class LoginDto {
 
 @ApiTags('Authentication')
 @Controller({ path: 'auth', version: '1' })
+// Rate-limit auth endpoints to blunt credential brute-forcing / signup abuse:
+// at most 5 requests per minute per client IP.
+@UseGuards(ThrottlerGuard)
+@Throttle({ default: { limit: 5, ttl: 60000 } })
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

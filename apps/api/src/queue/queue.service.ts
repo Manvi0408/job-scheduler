@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Queue, RetryPolicy, Project, Job, User, Organization, OrganizationMember } from 'shared';
+import { Queue, RetryPolicy, Project, Job } from 'shared';
 
 @Injectable()
 export class QueueService {
@@ -18,57 +18,10 @@ export class QueueService {
   ) {}
 
   async onModuleInit() {
-    // Seed default User, Organization, and Project for bypass auth
-    const defaultUserEmail = 'admin@scheduler.io';
-    const defaultOrgId = '00000000-0000-0000-0000-000000000000';
-    const defaultProjectId = '00000000-0000-0000-0000-000000000000';
-
-    try {
-      await this.dataSource.transaction(async (manager) => {
-        let user = await manager.findOne(User, { where: { email: defaultUserEmail } });
-        if (!user) {
-          user = manager.create(User, {
-            email: defaultUserEmail,
-            passwordHash: 'bypassed',
-          });
-          user = await manager.save(User, user);
-        }
-
-        let org = await manager.findOne(Organization, { where: { id: defaultOrgId } });
-        if (!org) {
-          org = manager.create(Organization, {
-            id: defaultOrgId,
-            name: 'Default Organization',
-            ownerId: user.id,
-          });
-          org = await manager.save(Organization, org);
-        }
-
-        let member = await manager.findOne(OrganizationMember, {
-          where: { userId: user.id, organizationId: org.id },
-        });
-        if (!member) {
-          member = manager.create(OrganizationMember, {
-            userId: user.id,
-            organizationId: org.id,
-            role: 'OWNER',
-          });
-          await manager.save(OrganizationMember, member);
-        }
-
-        let proj = await manager.findOne(Project, { where: { id: defaultProjectId } });
-        if (!proj) {
-          proj = manager.create(Project, {
-            id: defaultProjectId,
-            name: 'Default Project',
-            organizationId: org.id,
-          });
-          await manager.save(Project, proj);
-        }
-      });
-    } catch (err) {
-      console.error('Error seeding default organizations/projects:', err);
-    }
+    // NOTE: The previous "bypass auth" seeding of a privileged admin@scheduler.io
+    // OWNER account (passwordHash: 'bypassed') was removed during the security
+    // hardening. Real users now create their own organizations and projects via
+    // signup; there is no built-in backdoor account.
 
     // Seed default retry policies
     const defaults = [

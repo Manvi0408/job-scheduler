@@ -4,8 +4,7 @@ import { Repository, DataSource } from 'typeorm';
 import { User, Organization, OrganizationMember } from 'shared';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'JWT_Super_Secret_Key_For_Job_Scheduler_2026_!';
+import { getJwtSecret, JWT_EXPIRES_IN } from './jwt.config';
 
 @Injectable()
 export class AuthService {
@@ -50,8 +49,8 @@ export class AuthService {
 
     const token = jwt.sign(
       { id: result.user.id, email: result.user.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
+      getJwtSecret(),
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     return {
@@ -71,21 +70,15 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    let isPasswordCorrect = false;
-    if (user.email === 'admin@scheduler.io' && user.passwordHash === 'bypassed') {
-      isPasswordCorrect = passwordRaw === 'admin' || passwordRaw === 'admin123' || passwordRaw === 'bypassed';
-    } else {
-      isPasswordCorrect = await bcrypt.compare(passwordRaw, user.passwordHash);
-    }
-
+    const isPasswordCorrect = await bcrypt.compare(passwordRaw, user.passwordHash);
     if (!isPasswordCorrect) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '24h' }
+      getJwtSecret(),
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     return {

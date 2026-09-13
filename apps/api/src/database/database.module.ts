@@ -28,11 +28,18 @@ import * as entities from 'shared';
           (val) => typeof val === 'function' && val.name && val.prototype
         );
 
+        // synchronize auto-mutates the live schema and can drop/alter columns — it
+        // is unsafe in production (data-loss risk). Enable it only outside prod, or
+        // explicitly via DB_SYNCHRONIZE=true for a one-off first boot on a fresh DB.
+        const synchronize =
+          nodeEnv !== 'production' ||
+          configService.get<string>('DB_SYNCHRONIZE') === 'true';
+
         return {
           type: (isPostgres ? 'postgres' : 'mysql') as any,
           url: dbUrl,
           entities: entityClasses as any,
-          synchronize: true, // For portfolio/prototype, synchronize is excellent for out-of-the-box running
+          synchronize,
           ssl: useSsl ? { rejectUnauthorized: false } : undefined,
           logging: nodeEnv === 'development' ? ['error', 'warn'] : ['error'],
         };

@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { DatabaseModule } from './database/database.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
@@ -21,6 +23,8 @@ import { AiModule } from './ai/ai.module';
     }),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
+    // Baseline rate limiting for all endpoints: 100 requests / minute / IP.
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     DatabaseModule,
     RedisModule,
     AuthModule,
@@ -31,6 +35,10 @@ import { AiModule } from './ai/ai.module';
     WorkerModule,
     TelemetryModule,
     AiModule,
+  ],
+  providers: [
+    // Apply the baseline throttler to every route by default.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}
